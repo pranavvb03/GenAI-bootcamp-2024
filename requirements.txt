@@ -3,4 +3,4 @@ youtube-dl==2021.12.17
 clip-by-openai==0.1.0
 annoy==1.17.0
 pillow==8.4.0
-
+torch==1.7.1
