@@ -1,8 +1,7 @@
-streamlit
-youtube-dl
-torch
-clip-by-openai
-annoy
-pillow
-ffmpeg
-click
+streamlit==1.19.0
+youtube-dl==2021.12.17
+torch==1.10.0
+clip-by-openai==1.0.0
+annoy==1.17.0
+pillow==8.4.0
+
