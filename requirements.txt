@@ -1,0 +1,8 @@
+streamlit
+youtube-dl
+torch
+clip-by-openai
+annoy
+pillow
+ffmpeg
+click
