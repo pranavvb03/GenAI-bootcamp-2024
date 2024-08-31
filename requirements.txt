@@ -10,5 +10,4 @@ faiss-cpu
 InstructorEmbedding
 google-generativeai
 annoy==1.17.0
-pillow==8.4.0
 pypdf
