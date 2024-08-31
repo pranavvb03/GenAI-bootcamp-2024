@@ -1,6 +1,14 @@
-streamlit==1.19.0
-youtube-dl==2021.12.17
-clip-by-openai==0.1.0
+streamlit
+transformers
+langchain
+langchain_community
+langchain_google_genai
+python-dotenv
+tiktoken
+sentence-transformers
+faiss-cpu
+InstructorEmbedding
+google-generativeai
 annoy==1.17.0
 pillow==8.4.0
 torch==1.7.1
