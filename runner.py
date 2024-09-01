@@ -95,7 +95,7 @@ def main():
     if user_question:
         try:
             vector_store = load_vector_store()
-            response = handle_user_input(user_question, vector_store)
+            response = user_input(user_question, vector_store)
             st.write("Reply: ", response)
         except ValueError as e:
             st.error(f"Error loading FAISS index: {e}. Please process the PDF files first.")
