@@ -64,26 +64,29 @@ def user_input(user_question):
     st.write("Reply: ", response["output_text"])
 
 def main():
-  st.set_page_config(page_title="Chat PDF", page_icon=":file_pdf:")  # Set title and icon
+    st.set_page_config(page_title="Chat PDF", page_icon=":file_pdf:")  # Set title and icon
 
-  st.header("<h1 style='color: #3498db; text-align: center;'>A complete end to end PDF RAG chat application using Gemini</h1>")  # Colored header with center alignment
+    # Colored header with center alignment
+    st.markdown("<h1 style='color: #3498db; text-align: center;'>A complete end-to-end PDF RAG chat application using Gemini</h1>", unsafe_allow_html=True)
 
-  user_question = st.text_input("**Ask a Question from the PDF Files**", key="question_input", style="font-size: 18px; padding: 10px; border: 1px solid #ddd; border-radius: 5px;")  # Styled text input
+    user_question = st.text_input("Ask a Question from the PDF Files", key="question_input")  # Plain text input without styling
 
-  if user_question:
-    user_input(user_question)
+    if user_question:
+        user_input(user_question)
 
-  with st.sidebar:
-    st.title("<h3 style='color: #2ecc71;'>Menu:</h3>")  # Green colored sidebar title
+    with st.sidebar:
+        # Green colored sidebar title
+        st.markdown("<h3 style='color: #2ecc71;'>Menu:</h3>", unsafe_allow_html=True)
 
-    pdf_docs = st.file_uploader("Please upload your PDF Files and Click on the Submit & Process Button", accept_multiple_files=True)
+        pdf_docs = st.file_uploader("Please upload your PDF Files and Click on the Submit & Process Button", accept_multiple_files=True)
 
-    if st.button("Submit & Process", style="background-color: #9b59b6; color: white; padding: 10px 20px; border: none; border-radius: 5px;"):  # Styled button
-      with st.spinner("Processing..."):
-        raw_text = get_pdf_text(pdf_docs)
-        text_chunks = get_text_chunks(raw_text)
-        get_vector_store(text_chunks)
-      st.success("Done!")
+        # Styled button using markdown and HTML
+        if st.button("Submit & Process"):
+            with st.spinner("Processing..."):
+                raw_text = get_pdf_text(pdf_docs)
+                text_chunks = get_text_chunks(raw_text)
+                get_vector_store(text_chunks)
+            st.success("Done!")
 
 if __name__ == "__main__":
     main()
