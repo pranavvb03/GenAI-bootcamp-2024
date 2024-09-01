@@ -50,7 +50,10 @@ def get_conversational_chain():
 
 def user_input(user_question):
     embeddings = GoogleGenerativeAIEmbeddings(model = "models/embedding-001")
-    
+    raw_text = get_pdf_text(pdf_docs)
+    text_chunks = get_text_chunks(raw_text)
+    new_db = FAISS.from_texts(text_chunks, embedding=embeddings)
+    new_db.save_local("faiss_index")
     new_db = FAISS.load_local("faiss_index", embeddings)
     docs = new_db.similarity_search(user_question)
 
@@ -68,7 +71,7 @@ def main():
     st.set_page_config(page_title="Chat PDF", page_icon=":file_pdf:")  # Set title and icon
 
     # Colored header with center alignment
-    st.markdown("<h1 style='color: #3498db; text-align: center;'>A complete end-to-end PDF RAG chat application using Gemini</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='color: #3498db; text-align: center;'>A complete end-to-end PDF RAG chat application using Gemini</h1>")
 
     user_question = st.text_input("Ask a Question from the PDF Files", key="question_input")  # Plain text input without styling
 
