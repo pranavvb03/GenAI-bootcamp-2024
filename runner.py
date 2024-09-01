@@ -12,8 +12,8 @@ from dotenv import load_dotenv
 from google.colab import userdata
 load_dotenv()
 
-GOOGLE_API_KEY=userdata.get('GOOGLE_API_KEY')
-genai.configure(api_key=GOOGLE_API_KEY)
+GEMINI_API_KEY = st.secrets["GOOGLE_API_KEY"]
+genai.configure(api_key=GEMINI_API_KEY)
 
 def get_pdf_text(pdf_docs):
     text = ""
