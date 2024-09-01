@@ -74,7 +74,7 @@ def main():
     user_input(user_question)
 
   with st.sidebar:
-    st.title("<h3 style='color: #2ecc71;'>Menu:</h3>", unsafe_allow_html=True)  # Green colored sidebar title
+    st.title("<h3 style='color: #2ecc71;'>Menu:</h3>")  # Green colored sidebar title
 
     pdf_docs = st.file_uploader("Please upload your PDF Files and Click on the Submit & Process Button", accept_multiple_files=True)
 
