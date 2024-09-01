@@ -28,12 +28,17 @@ def get_text_chunks(text):
     chunks = text_splitter.split_text(text)
     return chunks
 
-def get_vector_store(text_chunks):
+def create_vector_store(text_chunks):
     embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
     vector_store = FAISS.from_texts(text_chunks, embedding = embeddings)
     vector_store.save_local("faiss_index")
     return vector_store
-
+    
+def load_vector_store():
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+    vector_store = FAISS.load_local("faiss_index", embeddings)
+    return vector_store
+    
 def get_conversational_chain():
     prompt_template = """
     Answer the question in as detailed manner as possible from the provided context, make sure to provide all the details, if the answer is not in the provided
@@ -49,11 +54,8 @@ def get_conversational_chain():
     chain = load_qa_chain(model,chain_type = "stuff",prompt = prompt)
     return chain
 
-def user_input(user_question,vector_store = "faiss_index"):
-    embeddings = GoogleGenerativeAIEmbeddings(model = "models/embedding-001")
-    
-    new_db = FAISS.load_local(vector_store, embeddings)
-    docs = new_db.similarity_search(user_question)
+def user_input(user_question,vector_store):
+    docs = vector_store.similarity_search(user_question)
 
     chain = get_conversational_chain()
 
@@ -63,7 +65,7 @@ def user_input(user_question,vector_store = "faiss_index"):
         , return_only_outputs=True)
 
     print(response)
-    st.write("Reply: ", response["output_text"])
+    return response["output_text"]
 
 def main():
     st.set_page_config(page_title="Chat PDF", page_icon=":file_pdf:")  # Set title and icon
@@ -71,7 +73,7 @@ def main():
     # Colored header with center alignment
     st.markdown("<h1 style='color: #3498db; text-align: center;'>A complete end-to-end PDF RAG chat application using Gemini</h1>",unsafe_allow_html = True)
 
-    user_question = st.text_input("Ask a Question from the PDF Files", key="question_input")  # Plain text input without styling
+    user_question = st.text_input("Ask a Question from the PDF Files")  # Plain text input without styling
 
     with st.sidebar:
         # Green colored sidebar title
@@ -81,13 +83,22 @@ def main():
 
         # Styled button using markdown and HTML
         if st.button("Submit & Process"):
-            with st.spinner("Processing..."):
-                raw_text = get_pdf_text(pdf_docs)
-                text_chunks = get_text_chunks(raw_text)
-                get_vector_store(text_chunks)
-            st.success("Done!")
+            if pdf_docs:
+                with st.spinner("Processing..."):
+                    raw_text = get_pdf_text(pdf_docs)
+                    text_chunks = get_text_chunks(raw_text)
+                    create_vector_store(text_chunks)
+                st.success("Processing completed successfully!")
+            else:
+                st.error("Please upload PDF files before submitting.")
+
     if user_question:
-        user_input(user_question)
+        try:
+            vector_store = load_vector_store()
+            response = handle_user_input(user_question, vector_store)
+            st.write("Reply: ", response)
+        except ValueError as e:
+            st.error(f"Error loading FAISS index: {e}. Please process the PDF files first.")
         
 if __name__ == "__main__":
     main()
