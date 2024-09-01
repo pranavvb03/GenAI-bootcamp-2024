@@ -48,13 +48,10 @@ def get_conversational_chain():
     chain = load_qa_chain(model,chain_type = "stuff",prompt = prompt)
     return chain
 
-def user_input(user_question):
+def user_input(user_question,vector_store):
     embeddings = GoogleGenerativeAIEmbeddings(model = "models/embedding-001")
-    raw_text = get_pdf_text(pdf_docs)
-    text_chunks = get_text_chunks(raw_text)
-    new_db = FAISS.from_texts(text_chunks, embedding=embeddings)
-    new_db.save_local("faiss_index")
-    new_db = FAISS.load_local("faiss_index", embeddings)
+    
+    new_db = FAISS.load_local(vector_store, embeddings)
     docs = new_db.similarity_search(user_question)
 
     chain = get_conversational_chain()
@@ -75,9 +72,6 @@ def main():
 
     user_question = st.text_input("Ask a Question from the PDF Files", key="question_input")  # Plain text input without styling
 
-    if user_question:
-        user_input(user_question)
-
     with st.sidebar:
         # Green colored sidebar title
         st.markdown("<h3 style='color: #2ecc71;'>Menu:</h3>", unsafe_allow_html=True)
@@ -89,8 +83,10 @@ def main():
             with st.spinner("Processing..."):
                 raw_text = get_pdf_text(pdf_docs)
                 text_chunks = get_text_chunks(raw_text)
-                get_vector_store(text_chunks)
+                vector_store = get_vector_store(text_chunks)
             st.success("Done!")
-
+    if user_question:
+        user_input(user_question,vector_store)
+        
 if __name__ == "__main__":
     main()
