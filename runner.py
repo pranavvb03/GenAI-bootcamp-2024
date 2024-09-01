@@ -9,10 +9,11 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.chains.question_answering import load_qa_chain
 from langchain.prompts import PromptTemplate
 from dotenv import load_dotenv
-
+from google.colab import userdata
 load_dotenv()
 
-genai.configure(api_key = os.getenv("GOOGLE_API_KEY")) 
+GOOGLE_API_KEY=userdata.get('GOOGLE_API_KEY')
+genai.configure(api_key=GOOGLE_API_KEY)
 
 def get_pdf_text(pdf_docs):
     text = ""
