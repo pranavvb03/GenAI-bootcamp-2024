@@ -49,7 +49,7 @@ def get_conversational_chain():
     chain = load_qa_chain(model,chain_type = "stuff",prompt = prompt)
     return chain
 
-def user_input(user_question,vector_store):
+def user_input(user_question,vector_store = "faiss_index"):
     embeddings = GoogleGenerativeAIEmbeddings(model = "models/embedding-001")
     
     new_db = FAISS.load_local(vector_store, embeddings)
@@ -84,10 +84,10 @@ def main():
             with st.spinner("Processing..."):
                 raw_text = get_pdf_text(pdf_docs)
                 text_chunks = get_text_chunks(raw_text)
-                vector_store = get_vector_store(text_chunks)
+                get_vector_store(text_chunks)
             st.success("Done!")
     if user_question:
-        user_input(user_question,vector_store)
+        user_input(user_question)
         
 if __name__ == "__main__":
     main()
