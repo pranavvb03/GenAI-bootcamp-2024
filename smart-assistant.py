@@ -1,9 +1,9 @@
 import streamlit as st
 from sentence_transformers import SentenceTransformer
 import faiss
-from langchain import LLMChain
+from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
-from langchain.llms import HuggingFaceHub
+from langchain_community.llms import HuggingFaceHub
 import time
 
 # Initialize model and vector store
@@ -70,7 +70,7 @@ def reminder_tool(time_in_seconds, message):
 # Summarization tool
 def summarize_text_tool(text):
     prompt = f"Summarize this: {text}"
-    return llm.run(prompt)
+    return llm(prompt)
 
 # Initialize document store and assistant
 doc_store = DocumentStore()
