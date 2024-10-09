@@ -25,8 +25,9 @@ class DocumentStore:
         D, I = self.index.search(query_embedding, top_k)
         return [self.documents[i] for i in I[0]]
 
+huggingface_api_key = st.secrets["YOUR_API_KEY"]
 # Load the language model
-llm = HuggingFaceHub(repo_id="google/flan-t5-small", model_kwargs={"temperature": 0.7}, huggingfacehub_api_token="YOUR_API_KEY")
+llm = HuggingFaceHub(repo_id="google/flan-t5-small", model_kwargs={"temperature": 0.7}, huggingfacehub_api_token=huggingface_api_key)
 
 # Define the prompt for the assistant
 template = """
