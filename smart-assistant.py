@@ -27,7 +27,7 @@ class DocumentStore:
 
 huggingface_api_key = st.secrets["YOUR_API_KEY"]
 # Load the language model
-llm = HuggingFaceHub(repo_id="google/flan-t5-small", "huggingfacehub_api_token": huggingface_api_key)
+llm = HuggingFaceHub(repo_id="google/flan-t5-small", model_kwargs={"temperature": 0.7,"huggingfacehub_api_token": huggingface_api_key})
 
 # Define the prompt for the assistant
 template = """
