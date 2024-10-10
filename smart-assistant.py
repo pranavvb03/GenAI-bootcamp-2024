@@ -3,7 +3,7 @@ from sentence_transformers import SentenceTransformer
 import faiss
 from langchain.chains import LLMChain
 from langchain.prompts import PromptTemplate
-from langchain_community.llms import HuggingFaceHub
+from langchain.llms import HuggingFaceHub
 import time
 
 # Initialize model and vector store
@@ -51,7 +51,7 @@ class SmartAssistant:
         # First search in the uploaded documents
         results = self.document_store.search(question)
         if results:
-            return f"I found something related to your question in your documents: {results[0]}"
+            return f"I found something related to your question in your documents:\n {results[0]}"
         else:
             # If no document matches, ask the LLM
             return self.chain.run(question)
