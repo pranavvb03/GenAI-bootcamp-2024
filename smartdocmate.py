@@ -5,8 +5,8 @@ from langchain.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import FAISS
-import speech_recognition as sr
-import pyttsx3
+# import speech_recognition as sr
+# import pyttsx3
 
 # Initialize Groq API client with environment variable
 
@@ -24,8 +24,8 @@ def query_groq_api(question, context):
     return chat_completion.choices[0].message.content
 
 # Voice recognition setup
-recognizer = sr.Recognizer()
-engine = pyttsx3.init()
+# recognizer = sr.Recognizer()
+# engine = pyttsx3.init()
 
 # Load and process document
 def load_and_preprocess_document(pdf_file_path):
@@ -48,22 +48,22 @@ def query_document(question, vector_store):
     return context
 
 # Voice input function
-def voice_input():
-    with sr.Microphone() as source:
-        st.write("Listening for your query...")
-        audio = recognizer.listen(source)
-        try:
-            query = recognizer.recognize_google(audio)
-            st.write(f"You said: {query}")
-            return query
-        except sr.UnknownValueError:
-            st.write("Could not understand audio")
-            return None
+# def voice_input():
+#     with sr.Microphone() as source:
+#         st.write("Listening for your query...")
+#         audio = recognizer.listen(source)
+#         try:
+#             query = recognizer.recognize_google(audio)
+#             st.write(f"You said: {query}")
+#             return query
+#         except sr.UnknownValueError:
+#             st.write("Could not understand audio")
+#             return None
 
-# Voice output function
-def voice_output(text):
-    engine.say(text)
-    engine.runAndWait()
+# # Voice output function
+# def voice_output(text):
+#     engine.say(text)
+#     engine.runAndWait()
 
 # Streamlit Interface
 st.title("SmartDocMate: AI-powered Document Assistant")
@@ -89,13 +89,13 @@ if uploaded_file:
             context = query_document(question, vector_store)
             answer = query_groq_api(question, context)
             st.write(f"Answer: {answer}")
-            voice_output(answer)
+            # voice_output(answer)
 
-    elif query_option == "Voice":
-        if st.button("Record Query"):
-            question = voice_input()
-            if question:
-                context = query_document(question, vector_store)
-                answer = query_groq_api(question, context)
-                st.write(f"Answer: {answer}")
-                voice_output(answer)
+    # elif query_option == "Voice":
+    #     if st.button("Record Query"):
+    #         question = voice_input()
+    #         if question:
+    #             context = query_document(question, vector_store)
+    #             answer = query_groq_api(question, context)
+    #             st.write(f"Answer: {answer}")
+    #             voice_output(answer)
