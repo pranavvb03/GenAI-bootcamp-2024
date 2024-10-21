@@ -71,7 +71,7 @@ st.title("SmartDocMate: AI-powered Document Assistant")
 # File upload
 uploaded_file = st.file_uploader("Upload your PDF document", type="pdf")
 if uploaded_file:
-    pdf_path = f"./uploads/{uploaded_file.name}"
+    pdf_path = f"{uploaded_file.name}"
     with open(pdf_path, "wb") as f:
         f.write(uploaded_file.getbuffer())
     
