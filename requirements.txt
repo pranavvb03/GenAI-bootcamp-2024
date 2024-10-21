@@ -3,6 +3,9 @@ transformers
 langchain
 langchain_community
 langchain_google_genai
+groq 
+SpeechRecognition 
+pyttsx3
 python-dotenv
 tiktoken
 sentence-transformers
