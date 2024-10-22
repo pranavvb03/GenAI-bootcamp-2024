@@ -63,7 +63,7 @@ def load_and_preprocess_documents(files):
 
 # Create FAISS vector store from the documents
 def create_faiss_vector_store(texts):
-    embeddings = GoogleGenerativeAIEmbeddings(model="embedding-gecko")  # Replace with the embeddings of your choice
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")  # Replace with the embeddings of your choice
     vector_store = FAISS.from_documents(texts, embeddings)
     return vector_store
 
