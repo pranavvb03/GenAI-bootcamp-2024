@@ -2,7 +2,6 @@ import os
 import streamlit as st
 import google.generativeai as genai
 from groq import Groq
-from langchain_groq import ChatGroq
 from langchain.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
