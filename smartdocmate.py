@@ -8,6 +8,7 @@ from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain.vectorstores import FAISS
 import speech_recognition as sr
 from gtts import gTTS
+import tempfile
 
 # Initialize Groq API client
 groq_api = "YOUR_GROQ_API_KEY"
