@@ -7,7 +7,6 @@ langchain_google_genai
 groq 
 SpeechRecognition 
 gtts 
-playsound
 python-dotenv
 tiktoken
 sentence-transformers
