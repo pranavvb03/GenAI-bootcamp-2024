@@ -9,7 +9,6 @@ from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain.vectorstores import FAISS
 import speech_recognition as sr
 from gtts import gTTS
-from playsound import playsound
 
 # Initialize Groq API client
 groq_api = "YOUR_GROQ_API_KEY"
@@ -33,7 +32,9 @@ def query_groq_api(question, context):
 def voice_output(text):
     tts = gTTS(text=text, lang='en')
     tts.save("output.mp3")
-    playsound("output.mp3")
+    audio_file = open("output.mp3", "rb")
+    audio_bytes = audio_file.read()
+    st.audio(audio_bytes, format='audio/mp3')
     os.remove("output.mp3")
 
 # Load and process multiple documents
