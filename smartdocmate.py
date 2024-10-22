@@ -10,6 +10,9 @@ import speech_recognition as sr
 from gtts import gTTS
 import tempfile
 
+GEMINI_API_KEY = st.secrets["GOOGLE_API_KEY"]
+genai.configure(api_key=GEMINI_API_KEY)
+
 # Initialize Groq API client
 groq_api = "YOUR_GROQ_API_KEY"
 client = Groq(api_key=groq_api)
@@ -60,7 +63,7 @@ def load_and_preprocess_documents(files):
 
 # Create FAISS vector store from the documents
 def create_faiss_vector_store(texts):
-    embeddings = GoogleGenerativeAIEmbeddings()  # Replace with the embeddings of your choice
+    embeddings = GoogleGenerativeAIEmbeddings(model="embedding-gecko")  # Replace with the embeddings of your choice
     vector_store = FAISS.from_documents(texts, embeddings)
     return vector_store
 
