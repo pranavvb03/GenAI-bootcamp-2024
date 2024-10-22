@@ -1,4 +1,5 @@
 streamlit
+wheel
 transformers
 langchain
 langchain_community
