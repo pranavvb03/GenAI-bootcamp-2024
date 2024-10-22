@@ -14,7 +14,7 @@ GEMINI_API_KEY = st.secrets["GOOGLE_API_KEY"]
 genai.configure(api_key=GEMINI_API_KEY)
 
 # Initialize Groq API client
-groq_api = "YOUR_GROQ_API_KEY"
+groq_api =  st.secrets["YOUR_GROQ_API_KEY"]
 client = Groq(api_key=groq_api)
 # client = Groq(api_key=os.getenv("YOUR_GROQ_API_KEY"))
 
