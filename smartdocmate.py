@@ -40,9 +40,19 @@ def voice_output(text):
 def load_and_preprocess_documents(files):
     documents = []
     for file in files:
-        loader = PyPDFLoader(file)
+        # Save the file to a temporary location
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
+            tmp_file.write(file.read())
+            tmp_file_path = tmp_file.name
+
+        # Load the PDF using the file path
+        loader = PyPDFLoader(tmp_file_path)
         docs = loader.load()
         documents.extend(docs)
+
+        # Remove the temp file
+        os.remove(tmp_file_path)
+
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
     texts = text_splitter.split_documents(documents)
     return texts
