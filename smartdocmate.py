@@ -1,19 +1,25 @@
-import streamlit as st
 import os
+import streamlit as st
+import google.generativeai as genai
 from groq import Groq
+from langchain_groq import ChatGroq
 from langchain.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.embeddings import OpenAIEmbeddings
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain.vectorstores import FAISS
-# import speech_recognition as sr
-# import pyttsx3
+import speech_recognition as sr
+from gtts import gTTS
+from playsound import playsound
 
-# Initialize Groq API client with environment variable
+# Initialize Groq API client
+groq_api = "YOUR_GROQ_API_KEY"
+client = Groq(api_key=groq_api)
+# client = Groq(api_key=os.getenv("YOUR_GROQ_API_KEY"))
 
-groq_api_key = st.secrets["YOUR_GROQ_API_KEY"]
-client = Groq(api_key=groq_api_key)
+# Voice input and output setup
+recognizer = sr.Recognizer()
 
-# Function to interact with the Groq API for question answering
+# Function to interact with Groq API for question answering
 def query_groq_api(question, context):
     chat_completion = client.chat.completions.create(
         messages=[
@@ -23,79 +29,80 @@ def query_groq_api(question, context):
     )
     return chat_completion.choices[0].message.content
 
-# Voice recognition setup
-# recognizer = sr.Recognizer()
-# engine = pyttsx3.init()
+# gTTS-based voice output function
+def voice_output(text):
+    tts = gTTS(text=text, lang='en')
+    tts.save("output.mp3")
+    playsound("output.mp3")
+    os.remove("output.mp3")
 
-# Load and process document
-def load_and_preprocess_document(pdf_file_path):
-    loader = PyPDFLoader(pdf_file_path)
-    documents = loader.load()
+# Load and process multiple documents
+def load_and_preprocess_documents(files):
+    documents = []
+    for file in files:
+        loader = PyPDFLoader(file)
+        docs = loader.load()
+        documents.extend(docs)
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
     texts = text_splitter.split_documents(documents)
     return texts
 
-# Create FAISS vector store
+# Create FAISS vector store from the documents
 def create_faiss_vector_store(texts):
-    embeddings = OpenAIEmbeddings()  # Replace with appropriate embeddings
+    embeddings = GoogleGenerativeAIEmbeddings()  # Replace with the embeddings of your choice
     vector_store = FAISS.from_documents(texts, embeddings)
     return vector_store
 
-# Query the document
+# Query the document using FAISS vector store
 def query_document(question, vector_store):
     docs = vector_store.similarity_search(question)
-    context = " ".join([doc.page_content for doc in docs[:3]])  # Taking top 3 relevant docs
+    context = " ".join([doc.page_content for doc in docs[:3]])  # Retrieve top 3 relevant docs
     return context
 
-# Voice input function
-# def voice_input():
-#     with sr.Microphone() as source:
-#         st.write("Listening for your query...")
-#         audio = recognizer.listen(source)
-#         try:
-#             query = recognizer.recognize_google(audio)
-#             st.write(f"You said: {query}")
-#             return query
-#         except sr.UnknownValueError:
-#             st.write("Could not understand audio")
-#             return None
-
-# # Voice output function
-# def voice_output(text):
-#     engine.say(text)
-#     engine.runAndWait()
+# Voice input function using SpeechRecognition
+def voice_input():
+    with sr.Microphone() as source:
+        st.write("Listening for your query...")
+        audio = recognizer.listen(source)
+        try:
+            query = recognizer.recognize_google(audio)
+            st.write(f"You said: {query}")
+            return query
+        except sr.UnknownValueError:
+            st.write("Could not understand audio")
+            return None
 
 # Streamlit Interface
-st.title("SmartDocMate: AI-powered Document Assistant")
+st.title("SmartDocMate: AI-powered Multi-Document Assistant")
 
-# File upload
-uploaded_file = st.file_uploader("Upload your PDF document", type="pdf")
-if uploaded_file:
-    pdf_path = f"{uploaded_file.name}"
-    with open(pdf_path, "wb") as f:
-        f.write(uploaded_file.getbuffer())
-    
-    st.write("Processing document...")
-    texts = load_and_preprocess_document(pdf_path)
+# Multi-file upload for PDF documents
+uploaded_files = st.file_uploader("Upload your PDF documents", type="pdf", accept_multiple_files=True)
+
+if uploaded_files:
+    st.write("Processing documents...")
+    # Load and preprocess documents
+    texts = load_and_preprocess_documents(uploaded_files)
     vector_store = create_faiss_vector_store(texts)
-    st.write("Document processed successfully.")
+    st.write("Documents processed successfully.")
 
-    # Voice query or text query
+    # Query input options (Text or Voice)
     query_option = st.selectbox("Select input method:", ("Text", "Voice"))
     
+    # For text input query
     if query_option == "Text":
         question = st.text_input("Enter your query")
         if st.button("Submit"):
             context = query_document(question, vector_store)
             answer = query_groq_api(question, context)
             st.write(f"Answer: {answer}")
-            # voice_output(answer)
+            voice_output(answer)
 
-    # elif query_option == "Voice":
-    #     if st.button("Record Query"):
-    #         question = voice_input()
-    #         if question:
-    #             context = query_document(question, vector_store)
-    #             answer = query_groq_api(question, context)
-    #             st.write(f"Answer: {answer}")
-    #             voice_output(answer)
+    # For voice input query
+    elif query_option == "Voice":
+        if st.button("Record Query"):
+            question = voice_input()
+            if question:
+                context = query_document(question, vector_store)
+                answer = query_groq_api(question, context)
+                st.write(f"Answer: {answer}")
+                voice_output(answer)
