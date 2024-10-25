@@ -15,4 +15,6 @@ InstructorEmbedding
 google-generativeai
 annoy==1.17.0
 pypdf
-
+sqlparse
+pdfplumber
+torch
