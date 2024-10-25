@@ -1,5 +1,4 @@
 import streamlit as st
-import PyPDF2
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import sqlparse
