@@ -18,4 +18,5 @@ pypdf
 PyPDF2
 sqlparse
 pdfplumber
+accelerate
 torch
