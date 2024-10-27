@@ -1,10 +1,16 @@
+import os
 import streamlit as st
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
 import sqlparse
-import PyPDF2
+from groq import Groq
 
-# Load the model
+# Set up Groq API client
+groq_api_key = st.secrets["GROQ_API_KEY"]
+groq_client = Groq(api_key=groq_api_key)
+# groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+
+# Load Defog SQLCoder model and tokenizer
 model_name = "defog/sqlcoder-7b-2"
 tokenizer = AutoTokenizer.from_pretrained(model_name)
 model = AutoModelForCausalLM.from_pretrained(
@@ -15,55 +21,38 @@ model = AutoModelForCausalLM.from_pretrained(
     use_cache=True,
 )
 
-# Set up Streamlit page
-st.title("Text2SQL Generation Chatbot")
-
-# Chatbot greetings
-st.write("👋 Hello! I'm your SQL assistant! You can greet me, ask questions, or upload a PDF with table definitions.")
-st.write("Feel free to ask me SQL-related queries, and I will do my best to help you!")
-
-# Handle user input
-user_input = st.text_input("Your message: ")
-
-# Bot greeting response
-if "hello" in user_input.lower() or "hi" in user_input.lower():
-    st.write("🤖: Hi there! How can I assist you with SQL queries today?")
-
-# PDF upload section for table schema
-uploaded_file = st.file_uploader("Upload a PDF with your table definitions", type="pdf")
-
-# Function to extract table schema from PDF
-def extract_table_schema_from_pdf(pdf_file):
-    pdf_reader = PyPDF2.PdfReader(pdf_file)
-    schema_text = ""
-    for page in pdf_reader.pages:
-        schema_text += page.extract_text()
-    return schema_text
-
-# Display extracted table schema
-if uploaded_file is not None:
-    st.write("📄 Extracted Table Schema from PDF:")
-    table_schema = extract_table_schema_from_pdf(uploaded_file)
-    st.text_area("Extracted Schema", table_schema, height=200)
-
-# Function to generate SQL query
-def generate_query(question, schema):
-    prompt = f"""### Task
-Generate a SQL query to answer the following question: {question}
+# Prompt template for generating SQL queries with dynamic table definitions
+base_prompt = """### Task
+Generate SQL queries based on user questions and dynamically generated table definitions.
 
 ### Instructions
-- If you cannot answer the question with the available database schema, return 'I do not know'
-- Remember that profit is revenue minus cost
-- Remember that revenue is sale_price multiplied by quantity_sold
-- Remember that cost is purchase_price multiplied by quantity_sold
-### Database Schema
-This query will run on the following database schema:
-{schema}
+1. Dynamically generate `CREATE TABLE` statements based on context provided by the user.
+2. Use these table definitions to formulate accurate SQL queries.
+3. If the question cannot be answered, respond with "I do not know."
 
-### Answer
-Given the database schema, here is the SQL query that answers the question:
+### Contextual Table Definitions
+{table_definitions}
+
+### Question
+[QUESTION] {question} [/QUESTION]
+
+### SQL Answer
 [SQL]
 """
+
+# Define functions for dynamic table generation and SQL query generation
+def generate_table_definitions(context):
+    """Use Groq API to dynamically generate table definitions based on context."""
+    response = groq_client.chat.completions.create(
+        messages=[{"role": "user", "content": f"Create SQL tables based on the following context: {context}"}],
+        model="llama3-8b-8192",  # Adjust model as necessary
+    )
+    table_definitions = response.choices[0].message.content
+    return table_definitions
+
+def generate_sql_query(question, table_definitions):
+    """Generate SQL query based on user's question and generated table definitions."""
+    prompt = base_prompt.format(question=question, table_definitions=table_definitions)
     inputs = tokenizer(prompt, return_tensors="pt").to("cuda")
     generated_ids = model.generate(
         **inputs,
@@ -75,25 +64,48 @@ Given the database schema, here is the SQL query that answers the question:
         num_beams=2,
     )
     outputs = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
-
-    # Clean up SQL output
+    sql_query = sqlparse.format(outputs[0].split("[SQL]")[-1], reindent=True)
+    
+    # Clear cache to manage GPU memory
     torch.cuda.empty_cache()
     torch.cuda.synchronize()
 
-    return sqlparse.format(outputs[0].split("[SQL]")[-1], reindent=True)
+    return sql_query
 
-# If the user inputs a question and there's a table schema, generate a query
-if user_input and uploaded_file is not None:
-    st.write("🤖: Let me analyze that...")
-    generated_sql = generate_query(user_input, table_schema)
-    st.write(f"Here's the SQL query based on your question: \n```{generated_sql}```")
-else:
-    if user_input and not uploaded_file:
-        st.write("🤖: I can help with SQL queries, but first please upload a PDF with your table schema.")
+# Streamlit app interface
+st.title("Dynamic Text2SQL Chatbot")
+st.write("Interact with the chatbot to generate SQL queries based on your question and context.")
 
-# Friendly bot responses for common phrases
-if "thanks" in user_input.lower():
-    st.write("🤖: You're welcome! Let me know if you need more help.")
-if "bye" in user_input.lower():
-    st.write("🤖: Goodbye! Have a great day!")
+# Display a chat-like interface
+if "conversation" not in st.session_state:
+    st.session_state.conversation = []
+
+# Input form for user message
+with st.form(key="user_input_form"):
+    user_input = st.text_input("You:", "")
+    submit_button = st.form_submit_button("Send")
+
+if submit_button and user_input:
+    # Append user message to conversation
+    st.session_state.conversation.append(("user", user_input))
+    
+    # Check if user is greeting or asking a question
+    if "hello" in user_input.lower() or "hi" in user_input.lower():
+        bot_response = "Hello! I'm here to help you generate SQL queries. Please provide a context or ask a question."
+    else:
+        # Generate dynamic table definitions based on context
+        table_definitions = generate_table_definitions(user_input)
+        
+        # Generate SQL query based on question and table definitions
+        bot_response = generate_sql_query(user_input, table_definitions)
+
+    # Append bot response to conversation
+    st.session_state.conversation.append(("bot", bot_response))
+
+# Display the conversation
+for sender, message in st.session_state.conversation:
+    if sender == "user":
+        st.write(f"**You:** {message}")
+    else:
+        st.write(f"**Bot:** {message}")
 
