@@ -10,16 +10,11 @@ groq_api_key = st.secrets["GROQ_API_KEY"]
 groq_client = Groq(api_key=groq_api_key)
 # groq_client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
-# Load Defog SQLCoder model and tokenizer
-model_name = "defog/sqlcoder-7b-2"
+# Load a smaller language model compatible with CPU
+# You can replace with a smaller OpenAI GPT-2 model for faster performance
+model_name = "distilgpt2"  # Smaller model for CPU usage
 tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForCausalLM.from_pretrained(
-    model_name,
-    trust_remote_code=True,
-    torch_dtype=torch.float16,
-    device_map="auto",
-    use_cache=True,
-)
+model = AutoModelForCausalLM.from_pretrained(model_name)
 
 # Prompt template for generating SQL queries with dynamic table definitions
 base_prompt = """### Task
@@ -53,28 +48,24 @@ def generate_table_definitions(context):
 def generate_sql_query(question, table_definitions):
     """Generate SQL query based on user's question and generated table definitions."""
     prompt = base_prompt.format(question=question, table_definitions=table_definitions)
-    inputs = tokenizer(prompt, return_tensors="pt").to("cuda")
+    inputs = tokenizer(prompt, return_tensors="pt")
+
+    # Generate SQL query on CPU
     generated_ids = model.generate(
         **inputs,
-        num_return_sequences=1,
-        eos_token_id=tokenizer.eos_token_id,
-        pad_token_id=tokenizer.eos_token_id,
-        max_new_tokens=400,
-        do_sample=False,
+        max_new_tokens=150,
         num_beams=2,
+        no_repeat_ngram_size=2,
+        early_stopping=True
     )
-    outputs = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
-    sql_query = sqlparse.format(outputs[0].split("[SQL]")[-1], reindent=True)
+    outputs = tokenizer.decode(generated_ids[0], skip_special_tokens=True)
+    sql_query = sqlparse.format(outputs.split("[SQL]")[-1], reindent=True)
     
-    # Clear cache to manage GPU memory
-    torch.cuda.empty_cache()
-    torch.cuda.synchronize()
-
     return sql_query
 
 # Streamlit app interface
-st.title("Dynamic Text2SQL Chatbot")
-st.write("Interact with the chatbot to generate SQL queries based on your question and context.")
+st.title("Text2SQL Chatbot (CPU-Compatible)")
+st.write("This chatbot generates SQL queries based on your questions and context.")
 
 # Display a chat-like interface
 if "conversation" not in st.session_state:
@@ -108,4 +99,3 @@ for sender, message in st.session_state.conversation:
         st.write(f"**You:** {message}")
     else:
         st.write(f"**Bot:** {message}")
-
