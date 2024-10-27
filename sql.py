@@ -14,7 +14,10 @@ groq_client = Groq(api_key=groq_api_key)
 # You can replace with a smaller OpenAI GPT-2 model for faster performance
 model_name = "distilgpt2"  # Smaller model for CPU usage
 tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForCausalLM.from_pretrained(model_name)
+model = AutoModelForCausalLM.from_pretrained(
+    model_name,
+    torch_dtype=torch.float32,  # Ensure compatibility with CPU
+).to("cpu")  # Explicitly set to CPU
 
 # Prompt template for generating SQL queries with dynamic table definitions
 base_prompt = """### Task
@@ -48,7 +51,7 @@ def generate_table_definitions(context):
 def generate_sql_query(question, table_definitions):
     """Generate SQL query based on user's question and generated table definitions."""
     prompt = base_prompt.format(question=question, table_definitions=table_definitions)
-    inputs = tokenizer(prompt, return_tensors="pt")
+    inputs = tokenizer(prompt, return_tensors="pt").to("cpu")  # Ensure inputs are on CPU
 
     # Generate SQL query on CPU
     generated_ids = model.generate(
